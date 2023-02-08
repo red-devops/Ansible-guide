@@ -1,0 +1,33 @@
+---
+
+- name: Deploy CharlenesCoffeeCorner and run
+  hosts: all
+  become: yes
+  vars:
+    - workspace_path: ''
+  tasks:
+  - name: Only run "update_cache=yes" if the last one is more than 3600 seconds ago
+    ansible.builtin.apt:
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: Install java
+    include_role:
+      name: geerlingguy.java
+
+  - name: Create a directory if it does not exist
+    ansible.builtin.file:
+      path: /app/backend
+      state: directory
+      mode: '0755'
+
+  - name: Copy file with owner and permissions
+    ansible.builtin.copy:
+      src: "{{ workspace_path }}/CharlenesCoffeeCorner-Artifact/CharlenesCoffeeCorner-1.0-SNAPSHOT.jar"
+      dest: /app/backend/CharlenesCoffeeCorner-1.0-SNAPSHOT.jar
+
+  - name: Run artifact
+    ansible.builtin.command:
+      chdir: /app/backend
+      cmd: java -jar CharlenesCoffeeCorner-1.0-SNAPSHOT.jar s-coffee add-em bacon-roll orange-juice
+    
